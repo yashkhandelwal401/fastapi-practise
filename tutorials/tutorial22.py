@@ -12,7 +12,7 @@ def create_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=30)
     to_encode.update({
-        "exp":explore
+        "exp":expire
     })
     token = jwt.encode(to_encode, SECRET_KEY, algorithm= ALGORITHM)
 
@@ -21,11 +21,11 @@ def create_token(data: dict):
 #Login API(Token Generate)
 @app.post("/login")
 def login(username:str , password:str):
-    if username != "admin" or password != "1234"
-    raise HTTPException(
+    if username != "admin" or password != "1234":
+      raise HTTPException(
         status_code=401,
         detail="Invalid Username and password"
-    )
+      )
     token = create_token({
     "sub":username
     })
@@ -34,4 +34,21 @@ def login(username:str , password:str):
     }
 
 #Token Varify
+def varify_token(token: str = Header(None)):
 
+    try: 
+        payload = jwt.decode(token,SECRET_KEY,algorithms = [ALGORITHM])
+        return payload
+    except:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token"
+        )
+
+#protected Route
+@app.get("/secure")
+def secure_data(user = Depends(varify_token)):
+    return{
+        "message":"Secure Data Accessed",
+        "user":user
+    }
